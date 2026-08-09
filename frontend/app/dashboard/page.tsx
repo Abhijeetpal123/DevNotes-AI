@@ -282,12 +282,13 @@ export default function DashboardPage() {
         return;
       }
 
-      setNotes((prev) => prev.filter((n) => n._id !== noteId));
+      setNotes((prev) => prev.filter((n) => n && n._id !== noteId));
     } catch {
       alert("couldn't reach the server");
     }
   }
  const filteredNotes = notes.filter((note) => {
+  if (!note) return false;
   const q = searchQuery.trim().toLowerCase();
   if (!q) return true;
   const title = (note.title || "").toLowerCase();
@@ -296,8 +297,8 @@ export default function DashboardPage() {
 });
 
   const totalNotes = notes.length;
-  const explainedCount = notes.filter((n) => n.aiExplanation).length;
-  const summarizedCount = notes.filter((n) => n.aiSummary).length;
+const explainedCount = notes.filter((n) => n && n.aiExplanation).length;
+const summarizedCount = notes.filter((n) => n && n.aiSummary).length;
 
   return (
     <main className="min-h-screen bg-[#0A0E14] text-[#ECEFF4] antialiased selection:bg-[#FFB454]/30">
