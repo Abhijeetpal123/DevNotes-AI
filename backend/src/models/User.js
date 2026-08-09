@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     githubUrl: {
       type: String,
-      defaule: "",
+      default: "",
     },
     linkedinUrl: {
       type: String,

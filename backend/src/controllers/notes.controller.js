@@ -17,9 +17,10 @@ const createNote = async (req, res) => {
       category,
       user: req.user.id,
     });
-    return res.status(400).json({
+    return res.status(200).json({
       success: true,
       message: "Note Created Successfullly",
+      note,
     });
   } catch (error) {
     return res.status(500).json({
@@ -147,7 +148,7 @@ const deleteNote = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(5000).json({
+    res.status(500).json({
       success: false,
       message: "Tnternal Server error",
     });
