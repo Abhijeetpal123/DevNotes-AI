@@ -1,9 +1,33 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ChangeEvent, FormEvent } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const EXAMPLES = [
+  {
+    file: "closures.js",
+    prompt: '$ devnotes explain "closures"',
+    title: "Understanding closures",
+    body: "A closure is a function that remembers the variables from where it was created, even after that scope has closed.",
+    tags: ["#javascript", "#fundamentals"],
+  },
+  {
+    file: "decorators.py",
+    prompt: '$ devnotes explain "decorators"',
+    title: "Understanding decorators",
+    body: "A decorator wraps a function to extend its behavior without changing its source code — Python resolves it at definition time.",
+    tags: ["#python", "#patterns"],
+  },
+  {
+    file: "hooks.jsx",
+    prompt: '$ devnotes explain "useEffect"',
+    title: "Understanding useEffect",
+    body: "useEffect runs side effects after render and re-runs when its dependencies change — cleanup functions handle teardown.",
+    tags: ["#react", "#hooks"],
+  },
+];
+const API_BASE = process.env.NEXT_PUBLIC_URL ?? "http://localhost:5000";
 
 type FormState = {
   fullName: string;
@@ -55,12 +79,14 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>({ fullName: "", email: "", password: "" });
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [activeExample, setActiveExample] = useState(0);
 
   const strength = getPasswordStrength(form.password);
 
@@ -89,27 +115,28 @@ export default function RegisterPage() {
     if (Object.keys(nextErrors).length > 0) return;
 
     setIsSubmitting(true);
+    console.log("API BASE:", API_BASE);
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.fullName,
+          userName: form.fullName,
           email: form.email,
-          password: form.password,
+          passWord: form.password,
+          role:"Student"
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json();
 
-      if (!res.ok) {
-        setFormError(data?.message || "Couldn't create your account. Try again.");
-        return;
-      }
+if (!res.ok) {
+  setFormError(data.message || "Couldn't create your account. Try again.");
+  return;
+}
 
-      // Success — swap this for router.push("/login") if you're using
-      // next/navigation, or store the returned token first.
-      window.location.href = "/dashboard";
+// Registration successful
+router.push("/login");
     } catch {
       setFormError("Couldn't reach the server. Check your connection and try again.");
     } finally {
@@ -137,33 +164,35 @@ export default function RegisterPage() {
         </div>
 
         <div className="max-w-sm">
-          <div className="mb-2 flex gap-1">
-            <div className="rounded-t-md bg-[#161B26] px-3 py-1.5 font-mono text-xs text-[#ECEFF4]">
-              closures.md
-            </div>
-            <div className="px-3 py-1.5 font-mono text-xs text-[#5B6472]">hooks.md</div>
-          </div>
-          <div className="rounded-lg border border-[#232A38] bg-[#161B26] p-5">
-            <div className="mb-2 font-mono text-xs text-[#6EE7B7]">
-              $ devnotes explain &quot;closures&quot;
-            </div>
-            <div className="mb-1.5 text-sm font-medium text-[#ECEFF4]">Understanding closures</div>
-            <p className="text-[13px] leading-relaxed text-[#97A1B0]">
-              A closure is a function that remembers the variables from where it was
-              created, even after that scope has closed.
-              <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-[blink_1s_step-start_infinite] bg-[#6EE7B7] align-middle motion-reduce:animate-none" />
-            </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {["#javascript", "#fundamentals"].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-[#FFB454]/10 px-2 py-1 font-mono text-[11px] text-[#FFB454]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
+        <div className="mb-2 flex gap-1">
+  {EXAMPLES.map((ex, i) => (
+    <button
+      key={ex.file}
+      type="button"
+      onClick={() => setActiveExample(i)}
+      className={`rounded-t-md px-3 py-1.5 font-mono text-xs transition-colors ${
+        i === activeExample ? "bg-[#161B26] text-[#ECEFF4]" : "text-[#5B6472] hover:text-[#8C8D94]"
+      }`}
+    >
+      {ex.file}
+    </button>
+  ))}
+</div>
+<div className="rounded-lg border border-[#232A38] bg-[#161B26] p-5">
+  <div className="mb-2 font-mono text-xs text-[#6EE7B7]">{EXAMPLES[activeExample].prompt}</div>
+  <div className="mb-1.5 text-sm font-medium text-[#ECEFF4]">{EXAMPLES[activeExample].title}</div>
+  <p className="text-[13px] leading-relaxed text-[#97A1B0]">
+    {EXAMPLES[activeExample].body}
+    <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-[blink_1s_step-start_infinite] bg-[#6EE7B7] align-middle motion-reduce:animate-none" />
+  </p>
+  <div className="mt-3 flex flex-wrap gap-1.5">
+    {EXAMPLES[activeExample].tags.map((tag) => (
+      <span key={tag} className="rounded-full bg-[#FFB454]/10 px-2 py-1 font-mono text-[11px] text-[#FFB454]">
+        {tag}
+      </span>
+    ))}
+  </div>
+</div>
         </div>
 
         <div className="font-mono text-xs text-[#5B6472]">
